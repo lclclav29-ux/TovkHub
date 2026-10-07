@@ -1,41 +1,34 @@
 -- ==========================================
--- Instant GitHub API Loader (Zero Cache)
+-- TockHub Clean Loader
 -- ==========================================
-local HttpService = game:GetService("HttpService")
-
 local repo = "lclclav29-ux/TovkHub"
 local branch = "main"
-local filePath = "main.lua"
+local file = "main.lua"
 
--- Запрос прямо к API GitHub (без кэширования CDN)
-local apiUrl = string.format("https://api.github.com/repos/%s/contents/%s?ref=%s&t=%d", repo, filePath, branch, os.time())
+-- Безопасная очистка старых окон перед запуском
+local CoreGui = game:GetService("CoreGui")
+local function CleanOldUI()
+    for _, name in ipairs({"TockHubFloating", "TockHubModern", "TockHubPineapple"}) do
+        local old = CoreGui:FindFirstChild(name)
+        if old then old:Destroy() end
+    end
+end
+CleanOldUI()
 
-local success, response = pcall(function()
-    return game:HttpGet(apiUrl)
+-- Формируем URL с обходом кэша через метку времени
+local rawUrl = string.format("https://raw.githubusercontent.com/%s/%s/%s?t=%d", repo, branch, file, os.time())
+
+local success, code = pcall(function()
+    return game:HttpGet(rawUrl)
 end)
 
-if success and response then
-    local data = HttpService:JSONDecode(response)
-    if data and data.content then
-        -- Декодируем base64 контент, который отдал API
-        local base64 = data.content:gsub("\n", "")
-        local decodedCode = syn and syn.crypt and syn.crypt.base64.decode(base64) 
-            or crypt and crypt.base64decode and crypt.base64decode(base64)
-            or buffer and buffer.frombase64 and buffer.readstring(buffer.frombase64(base64), 0, #base64)
-        
-        -- Если экзекутор не поддерживает встроенный декодер base64, качаем напрямую по коммит-хэшу
-        if not decodedCode then
-            local rawUrl = string.format("https://raw.githubusercontent.com/%s/%s/%s?t=%d", repo, data.sha, filePath, os.time())
-            decodedCode = game:HttpGet(rawUrl)
-        end
-
-        local compiled, err = loadstring(decodedCode)
-        if compiled then
-            compiled()
-        else
-            warn("[TockHub]: Ошибка компиляции: " .. tostring(err))
-        end
+if success and code and #code > 0 then
+    local func, err = loadstring(code)
+    if func then
+        func()
+    else
+        warn("[TockHub]: Ошибка выполнения main.lua: " .. tostring(err))
     end
 else
-    warn("[TockHub]: Не удалось получить файл с API GitHub")
+    warn("[TockHub]: Не удалось получить main.lua с GitHub.")
 end
