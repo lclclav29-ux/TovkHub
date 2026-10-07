@@ -1,40 +1,41 @@
 -- ==========================================
--- TockHub Advanced Auto Cache-Bypasser
+-- Instant GitHub API Loader (Zero Cache)
 -- ==========================================
+local HttpService = game:GetService("HttpService")
+
 local repo = "lclclav29-ux/TovkHub"
 local branch = "main"
-local file = "main.lua"
+local filePath = "main.lua"
 
--- 1. Удаление старых интерфесов из CoreGui перед запуском
-local CoreGui = game:GetService("CoreGui")
-local getHui = gethui or function() return CoreGui end
-local targetGui = getHui()
+-- Запрос прямо к API GitHub (без кэширования CDN)
+local apiUrl = string.format("https://api.github.com/repos/%s/contents/%s?ref=%s&t=%d", repo, filePath, branch, os.time())
 
-for _, guiName in ipairs({"TockHubFloating", "TockHubModern", "TockHubPineapple"}) do
-    local oldGui = targetGui:FindFirstChild(guiName) or CoreGui:FindFirstChild(guiName)
-    if oldGui then
-        oldGui:Destroy()
-    end
-end
-
--- 2. Генерация уникального URL (случайный числовой хэш)
-math.randomseed(os.time())
-local uniqueHash = string.format("%d_%d", os.time(), math.random(100000, 999999))
-local rawUrl = string.format("https://raw.githubusercontent.com/%s/%s/%s?nocache=%s", repo, branch, file, uniqueHash)
-
--- 3. Безопасная загрузка свежего кода напрямую с GitHub
-local success, code = pcall(function()
-    -- Попытка запроса с занулением кэш-заголовков
-    return game:HttpGet(rawUrl, true)
+local success, response = pcall(function()
+    return game:HttpGet(apiUrl)
 end)
 
-if success and code and #code > 0 then
-    local compiledFunction, err = loadstring(code)
-    if compiledFunction then
-        compiledFunction()
-    else
-        warn("[TockHub Error]: Ошибка компиляции кода: " .. tostring(err))
+if success and response then
+    local data = HttpService:JSONDecode(response)
+    if data and data.content then
+        -- Декодируем base64 контент, который отдал API
+        local base64 = data.content:gsub("\n", "")
+        local decodedCode = syn and syn.crypt and syn.crypt.base64.decode(base64) 
+            or crypt and crypt.base64decode and crypt.base64decode(base64)
+            or buffer and buffer.frombase64 and buffer.readstring(buffer.frombase64(base64), 0, #base64)
+        
+        -- Если экзекутор не поддерживает встроенный декодер base64, качаем напрямую по коммит-хэшу
+        if not decodedCode then
+            local rawUrl = string.format("https://raw.githubusercontent.com/%s/%s/%s?t=%d", repo, data.sha, filePath, os.time())
+            decodedCode = game:HttpGet(rawUrl)
+        end
+
+        local compiled, err = loadstring(decodedCode)
+        if compiled then
+            compiled()
+        else
+            warn("[TockHub]: Ошибка компиляции: " .. tostring(err))
+        end
     end
 else
-    warn("[TockHub Error]: Не удалось загрузить свежий скрипт с GitHub.")
+    warn("[TockHub]: Не удалось получить файл с API GitHub")
 end
