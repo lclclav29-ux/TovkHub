@@ -122,15 +122,15 @@ MainStroke.Transparency = 0.92
 MainStroke.Thickness = 1
 MainStroke.Parent = MainFrame
 
--- Кнопка Крестика (Закрытие)
+-- Кнопка Крестика (Закрытие меню)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 22, 0, 22)
 CloseBtn.Position = UDim2.new(1, -28, 0, 8)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.BackgroundTransparency = 0.95
-CloseBtn.Text = "✕"
+CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
-CloseBtn.TextSize = 12
+CloseBtn.TextSize = 11
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.ZIndex = 10
 CloseBtn.Parent = MainFrame
@@ -154,7 +154,7 @@ Sidebar.Parent = MainFrame
 
 Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 10)
 
--- Хедер с ананасом и Выпадающим меню языка
+-- Хедер с иконкой Ананаса и Выбором языка
 local HeaderContainer = Instance.new("Frame")
 HeaderContainer.Size = UDim2.new(1, -12, 0, 32)
 HeaderContainer.Position = UDim2.new(0, 6, 0, 10)
@@ -162,16 +162,16 @@ HeaderContainer.BackgroundTransparency = 1
 HeaderContainer.Parent = Sidebar
 
 local PineappleIcon = Instance.new("ImageLabel")
-PineappleIcon.Size = UDim2.new(0, 24, 0, 24)
-PineappleIcon.Position = UDim2.new(0, 2, 0.5, -12)
+PineappleIcon.Size = UDim2.new(0, 22, 0, 22)
+PineappleIcon.Position = UDim2.new(0, 2, 0.5, -11)
 PineappleIcon.BackgroundTransparency = 1
-PineappleIcon.Image = "rbxassetid://6023426915"
+PineappleIcon.Image = "rbxassetid://10709798276" -- Рабочая иконка фрукта/ананаса
 PineappleIcon.ImageColor3 = AccentColor
 PineappleIcon.Parent = HeaderContainer
 
 local LogoText = Instance.new("TextLabel")
 LogoText.Size = UDim2.new(0, 50, 1, 0)
-LogoText.Position = UDim2.new(0, 28, 0, 0)
+LogoText.Position = UDim2.new(0, 26, 0, 0)
 LogoText.BackgroundTransparency = 1
 LogoText.Text = "TOCK<font color='#FFB428'>.H</font>"
 LogoText.RichText = true
@@ -187,7 +187,7 @@ LangBtn.Size = UDim2.new(0, 42, 0, 22)
 LangBtn.Position = UDim2.new(1, -44, 0.5, -11)
 LangBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 LangBtn.BackgroundTransparency = 0.9
-LangBtn.Text = CurrentLang .. " ▾"
+LangBtn.Text = CurrentLang .. " v"
 LangBtn.TextColor3 = AccentColor
 LangBtn.TextSize = 10
 LangBtn.Font = Enum.Font.GothamBold
@@ -226,7 +226,7 @@ local function CreateLangOpt(langText, yPos)
 
     Opt.MouseButton1Click:Connect(function()
         CurrentLang = langText
-        LangBtn.Text = CurrentLang .. " ▾"
+        LangBtn.Text = CurrentLang .. " v"
         LangDropdown.Visible = false
         if RefreshUI then RefreshUI() end
     end)
@@ -251,10 +251,12 @@ NavLayout.SortOrder = Enum.SortOrder.LayoutOrder
 NavLayout.Padding = UDim.new(0, 4)
 NavLayout.Parent = NavList
 
--- Блок Соцсетей
+-- ==========================================
+-- Блок Социальных Сетей (Исправленный дизайн)
+-- ==========================================
 local SocialsFrame = Instance.new("Frame")
-SocialsFrame.Size = UDim2.new(1, -16, 0, 32)
-SocialsFrame.Position = UDim2.new(0, 8, 1, -42)
+SocialsFrame.Size = UDim2.new(1, -16, 0, 28)
+SocialsFrame.Position = UDim2.new(0, 8, 1, -38)
 SocialsFrame.BackgroundTransparency = 1
 SocialsFrame.Parent = Sidebar
 
@@ -262,26 +264,36 @@ local SocialsLayout = Instance.new("UIListLayout")
 SocialsLayout.FillDirection = Enum.FillDirection.Horizontal
 SocialsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 SocialsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-SocialsLayout.Padding = UDim.new(0, 4)
+SocialsLayout.Padding = UDim.new(0, 6)
 SocialsLayout.Parent = SocialsFrame
 
-local function CreateSocialBtn(iconId, url, hoverColor)
-    local Btn = Instance.new("ImageButton")
-    Btn.Size = UDim2.new(0, 26, 0, 26)
-    Btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Btn.BackgroundTransparency = 0.95
-    Btn.Image = iconId
-    Btn.ImageColor3 = Color3.fromRGB(180, 180, 190)
+local function CreateSocialBtn(tagText, url, brandColor)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 32, 0, 24)
+    Btn.BackgroundColor3 = brandColor
+    Btn.BackgroundTransparency = 0.82
+    Btn.Text = tagText
+    Btn.TextColor3 = brandColor
+    Btn.TextSize = 10
+    Btn.Font = Enum.Font.GothamBold
     Btn.Parent = SocialsFrame
 
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
 
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Color = brandColor
+    Stroke.Transparency = 0.7
+    Stroke.Thickness = 1
+    Stroke.Parent = Btn
+
     Btn.MouseEnter:Connect(function()
-        Tween(Btn, 0.2, {BackgroundTransparency = 0.85, ImageColor3 = hoverColor})
+        Tween(Btn, 0.2, {BackgroundTransparency = 0.3, TextColor3 = Color3.fromRGB(255, 255, 255)})
+        Tween(Stroke, 0.2, {Transparency = 0.2})
     end)
 
     Btn.MouseLeave:Connect(function()
-        Tween(Btn, 0.2, {BackgroundTransparency = 0.95, ImageColor3 = Color3.fromRGB(180, 180, 190)})
+        Tween(Btn, 0.2, {BackgroundTransparency = 0.82, TextColor3 = brandColor})
+        Tween(Stroke, 0.2, {Transparency = 0.7})
     end)
 
     Btn.MouseButton1Click:Connect(function()
@@ -289,9 +301,10 @@ local function CreateSocialBtn(iconId, url, hoverColor)
     end)
 end
 
-CreateSocialBtn("rbxassetid://6031075938", Links.Discord, Color3.fromRGB(114, 137, 218))
-CreateSocialBtn("rbxassetid://6023426923", Links.Telegram, Color3.fromRGB(0, 136, 204))
-CreateSocialBtn("rbxassetid://6023426915", Links.YouTube, Color3.fromRGB(255, 60, 60))
+-- Кнопки соцсетей: Discord, Telegram, YouTube
+CreateSocialBtn("DC", Links.Discord, Color3.fromRGB(114, 137, 218))
+CreateSocialBtn("TG", Links.Telegram, Color3.fromRGB(0, 168, 235))
+CreateSocialBtn("YT", Links.YouTube, Color3.fromRGB(255, 65, 65))
 
 -- Контейнер для вкладок
 local ContentArea = Instance.new("Frame")
@@ -567,7 +580,6 @@ ExitConfirmBtn.Parent = BtnContainer
 Instance.new("UICorner", ExitConfirmBtn).CornerRadius = UDim.new(0, 6)
 table.insert(registeredLabels, {Item = ExitConfirmBtn, Key = "Exit"})
 
--- События кнопок выхода
 CloseBtn.MouseButton1Click:Connect(function()
     ModalOverlay.Visible = true
 end)
@@ -580,7 +592,7 @@ ExitConfirmBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- Динамическое обновление текста при смене языка
+-- Обновление элементов при смене языка
 RefreshUI = function()
     for _, tab in pairs(registeredTabs) do
         tab.Btn.Text = "   " .. L(tab.Key)
@@ -590,7 +602,7 @@ RefreshUI = function()
     end
 end
 
--- Наполнение Вкладок
+-- Вкладка Movement
 AddToggle(Pages.Main, "SpeedBypass", function(st) Config.SpeedBypass = st end)
 AddSlider(Pages.Main, "SpeedMult", 1, 5, 2, function(v) Config.SpeedMult = v end)
 AddToggle(Pages.Main, "JumpBypass", function(st) Config.JumpBypass = st end)
@@ -598,11 +610,14 @@ AddSlider(Pages.Main, "JumpForce", 30, 150, 60, function(v) Config.JumpForce = v
 AddToggle(Pages.Main, "NoclipBypass", function(st) Config.NoclipBypass = st end)
 AddToggle(Pages.Main, "FlyBypass", function(st) Config.FlyBypass = st end)
 
+-- Вкладка Visuals
 AddToggle(Pages.Visuals, "ESPBypass", function(st) Config.ESPBypass = st end)
 AddToggle(Pages.Visuals, "HitboxBypass", function(st) Config.HitboxBypass = st end)
 AddSlider(Pages.Visuals, "HitboxSize", 2, 25, 6, function(v) Config.HitboxSize = v end)
 
--- Игровая логика
+-- ==========================================
+-- Игровая Логика
+-- ==========================================
 RunService.RenderStepped:Connect(function(delta)
     if Config.SpeedBypass then
         local hrp = GetHRP()
