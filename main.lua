@@ -29,7 +29,10 @@ local Translations = {
         FlyBypass = "Режим полета [E]",
         ESPBypass = "Подсветка игроков",
         HitboxBypass = "Расширенный хитбокс",
-        HitboxSize = "Размер хитбокса"
+        HitboxSize = "Размер хитбокса",
+        ExitPrompt = "Вы уверены, что хотите выйти?",
+        Stay = "Остаться",
+        Exit = "Выйти"
     },
     EU = {
         Movement = "Movement",
@@ -42,7 +45,10 @@ local Translations = {
         FlyBypass = "Fly Bypass [E]",
         ESPBypass = "CoreGui Safe ESP",
         HitboxBypass = "Expand Hitbox",
-        HitboxSize = "Hitbox Size"
+        HitboxSize = "Hitbox Size",
+        ExitPrompt = "Are you sure you want to exit?",
+        Stay = "Stay",
+        Exit = "Exit"
     }
 }
 
@@ -116,6 +122,28 @@ MainStroke.Transparency = 0.92
 MainStroke.Thickness = 1
 MainStroke.Parent = MainFrame
 
+-- Кнопка Крестика (Закрытие)
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 22, 0, 22)
+CloseBtn.Position = UDim2.new(1, -28, 0, 8)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.BackgroundTransparency = 0.95
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(180, 180, 190)
+CloseBtn.TextSize = 12
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.ZIndex = 10
+CloseBtn.Parent = MainFrame
+
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+CloseBtn.MouseEnter:Connect(function()
+    Tween(CloseBtn, 0.2, {BackgroundTransparency = 0.85, TextColor3 = Color3.fromRGB(255, 80, 80)})
+end)
+CloseBtn.MouseLeave:Connect(function()
+    Tween(CloseBtn, 0.2, {BackgroundTransparency = 0.95, TextColor3 = Color3.fromRGB(180, 180, 190)})
+end)
+
 -- Боковая панель (Sidebar)
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 140, 1, 0)
@@ -167,13 +195,12 @@ LangBtn.Parent = HeaderContainer
 
 Instance.new("UICorner", LangBtn).CornerRadius = UDim.new(0, 5)
 
--- Выпадающее меню языка
 local LangDropdown = Instance.new("Frame")
 LangDropdown.Size = UDim2.new(0, 42, 0, 44)
 LangDropdown.Position = UDim2.new(1, -44, 1, 2)
 LangDropdown.BackgroundColor3 = Color3.fromRGB(22, 24, 30)
 LangDropdown.Visible = false
-LangDropdown.ZIndex = 10
+LangDropdown.ZIndex = 20
 LangDropdown.Parent = HeaderContainer
 
 Instance.new("UICorner", LangDropdown).CornerRadius = UDim.new(0, 5)
@@ -183,7 +210,7 @@ DropStroke.Color = Color3.fromRGB(255, 255, 255)
 DropStroke.Transparency = 0.9
 DropStroke.Parent = LangDropdown
 
-local RefreshUI -- Объявление функции обновления UI
+local RefreshUI
 
 local function CreateLangOpt(langText, yPos)
     local Opt = Instance.new("TextButton")
@@ -194,7 +221,7 @@ local function CreateLangOpt(langText, yPos)
     Opt.TextColor3 = Color3.fromRGB(200, 200, 210)
     Opt.TextSize = 10
     Opt.Font = Enum.Font.GothamBold
-    Opt.ZIndex = 11
+    Opt.ZIndex = 21
     Opt.Parent = LangDropdown
 
     Opt.MouseButton1Click:Connect(function()
@@ -314,8 +341,7 @@ local function AddTab(key, page)
 
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
 
-    local tabData = {Btn = Btn, Page = page, Key = key}
-    table.insert(registeredTabs, tabData)
+    table.insert(registeredTabs, {Btn = Btn, Page = page, Key = key})
 
     Btn.MouseButton1Click:Connect(function()
         for _, tab in pairs(registeredTabs) do
@@ -330,7 +356,7 @@ end
 AddTab("Movement", Pages.Main)
 AddTab("Visuals", Pages.Visuals)
 
--- Элементы управления с поддержкой перевода
+-- Элементы управления
 local registeredLabels = {}
 
 local function AddToggle(parent, key, callback)
@@ -353,7 +379,7 @@ local function AddToggle(parent, key, callback)
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = Frame
 
-    table.insert(registeredLabels, {Label = Label, Key = key})
+    table.insert(registeredLabels, {Item = Label, Key = key})
 
     local Switch = Instance.new("Frame")
     Switch.Size = UDim2.new(0, 28, 0, 14)
@@ -412,7 +438,7 @@ local function AddSlider(parent, key, min, max, default, callback)
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = Frame
 
-    table.insert(registeredLabels, {Label = Label, Key = key})
+    table.insert(registeredLabels, {Item = Label, Key = key})
 
     local Val = Instance.new("TextLabel")
     Val.Size = UDim2.new(0, 35, 0, 18)
@@ -461,13 +487,106 @@ local function AddSlider(parent, key, min, max, default, callback)
     end)
 end
 
+-- ==========================================
+-- Модальное Окно Подтверждения Выхода
+-- ==========================================
+local ModalOverlay = Instance.new("Frame")
+ModalOverlay.Size = UDim2.new(1, 0, 1, 0)
+ModalOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ModalOverlay.BackgroundTransparency = 0.4
+ModalOverlay.Visible = false
+ModalOverlay.ZIndex = 100
+ModalOverlay.Parent = MainFrame
+
+Instance.new("UICorner", ModalOverlay).CornerRadius = UDim.new(0, 10)
+
+local ConfirmCard = Instance.new("Frame")
+ConfirmCard.Size = UDim2.new(0, 250, 0, 120)
+ConfirmCard.Position = UDim2.new(0.5, -125, 0.5, -60)
+ConfirmCard.BackgroundColor3 = Color3.fromRGB(22, 24, 30)
+ConfirmCard.ZIndex = 101
+ConfirmCard.Parent = ModalOverlay
+
+Instance.new("UICorner", ConfirmCard).CornerRadius = UDim.new(0, 8)
+
+local CardStroke = Instance.new("UIStroke")
+CardStroke.Color = Color3.fromRGB(255, 255, 255)
+CardStroke.Transparency = 0.9
+CardStroke.Parent = ConfirmCard
+
+local QuestionLabel = Instance.new("TextLabel")
+QuestionLabel.Size = UDim2.new(1, -20, 0, 40)
+QuestionLabel.Position = UDim2.new(0, 10, 0, 15)
+QuestionLabel.BackgroundTransparency = 1
+QuestionLabel.Text = L("ExitPrompt")
+QuestionLabel.TextColor3 = Color3.fromRGB(230, 230, 240)
+QuestionLabel.TextSize = 11
+QuestionLabel.Font = Enum.Font.GothamMedium
+QuestionLabel.TextWrapped = true
+QuestionLabel.ZIndex = 102
+QuestionLabel.Parent = ConfirmCard
+
+table.insert(registeredLabels, {Item = QuestionLabel, Key = "ExitPrompt"})
+
+local BtnContainer = Instance.new("Frame")
+BtnContainer.Size = UDim2.new(1, -20, 0, 30)
+BtnContainer.Position = UDim2.new(0, 10, 1, -40)
+BtnContainer.BackgroundTransparency = 1
+BtnContainer.ZIndex = 102
+BtnContainer.Parent = ConfirmCard
+
+-- Кнопка "Остаться"
+local StayBtn = Instance.new("TextButton")
+StayBtn.Size = UDim2.new(0.48, 0, 1, 0)
+StayBtn.Position = UDim2.new(0, 0, 0, 0)
+StayBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+StayBtn.BackgroundTransparency = 0.92
+StayBtn.Text = L("Stay")
+StayBtn.TextColor3 = Color3.fromRGB(200, 200, 210)
+StayBtn.TextSize = 10
+StayBtn.Font = Enum.Font.GothamBold
+StayBtn.ZIndex = 103
+StayBtn.Parent = BtnContainer
+
+Instance.new("UICorner", StayBtn).CornerRadius = UDim.new(0, 6)
+table.insert(registeredLabels, {Item = StayBtn, Key = "Stay"})
+
+-- Кнопка "Выйти"
+local ExitConfirmBtn = Instance.new("TextButton")
+ExitConfirmBtn.Size = UDim2.new(0.48, 0, 1, 0)
+ExitConfirmBtn.Position = UDim2.new(0.52, 0, 0, 0)
+ExitConfirmBtn.BackgroundColor3 = Color3.fromRGB(230, 60, 60)
+ExitConfirmBtn.BackgroundTransparency = 0.15
+ExitConfirmBtn.Text = L("Exit")
+ExitConfirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ExitConfirmBtn.TextSize = 10
+ExitConfirmBtn.Font = Enum.Font.GothamBold
+ExitConfirmBtn.ZIndex = 103
+ExitConfirmBtn.Parent = BtnContainer
+
+Instance.new("UICorner", ExitConfirmBtn).CornerRadius = UDim.new(0, 6)
+table.insert(registeredLabels, {Item = ExitConfirmBtn, Key = "Exit"})
+
+-- События кнопок выхода
+CloseBtn.MouseButton1Click:Connect(function()
+    ModalOverlay.Visible = true
+end)
+
+StayBtn.MouseButton1Click:Connect(function()
+    ModalOverlay.Visible = false
+end)
+
+ExitConfirmBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
 -- Динамическое обновление текста при смене языка
 RefreshUI = function()
     for _, tab in pairs(registeredTabs) do
         tab.Btn.Text = "   " .. L(tab.Key)
     end
-    for _, item in pairs(registeredLabels) do
-        item.Label.Text = L(item.Key)
+    for _, obj in pairs(registeredLabels) do
+        obj.Item.Text = L(obj.Key)
     end
 end
 
