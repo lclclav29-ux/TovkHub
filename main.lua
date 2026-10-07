@@ -13,6 +13,44 @@ if CoreGui:FindFirstChild("TockHubPineapple") then
 end
 
 -- ==========================================
+-- Локализация (RU / EU)
+-- ==========================================
+local CurrentLang = "RU"
+
+local Translations = {
+    RU = {
+        Movement = "Движение",
+        Visuals = "Визуалы",
+        SpeedBypass = "Ускорение бега",
+        SpeedMult = "Множитель скорости",
+        JumpBypass = "Высокий прыжок",
+        JumpForce = "Сила прыжка",
+        NoclipBypass = "Проход сквозь стены",
+        FlyBypass = "Режим полета [E]",
+        ESPBypass = "Подсветка игроков",
+        HitboxBypass = "Расширенный хитбокс",
+        HitboxSize = "Размер хитбокса"
+    },
+    EU = {
+        Movement = "Movement",
+        Visuals = "Visuals",
+        SpeedBypass = "Speed Bypass",
+        SpeedMult = "Speed Multiplier",
+        JumpBypass = "Jump Bypass",
+        JumpForce = "Jump Force",
+        NoclipBypass = "Noclip Bypass",
+        FlyBypass = "Fly Bypass [E]",
+        ESPBypass = "CoreGui Safe ESP",
+        HitboxBypass = "Expand Hitbox",
+        HitboxSize = "Hitbox Size"
+    }
+}
+
+local function L(key)
+    return Translations[CurrentLang][key] or key
+end
+
+-- ==========================================
 -- Конфигурация и Ссылки
 -- ==========================================
 local Config = {
@@ -67,7 +105,7 @@ MainFrame.BackgroundTransparency = 0.1
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.ClipsDescendants = true
+MainFrame.ClipsDescendants = false
 MainFrame.Parent = ScreenGui
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
@@ -88,32 +126,91 @@ Sidebar.Parent = MainFrame
 
 Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 10)
 
--- Хедер с ананасом
+-- Хедер с ананасом и Выпадающим меню языка
 local HeaderContainer = Instance.new("Frame")
-HeaderContainer.Size = UDim2.new(1, -16, 0, 32)
-HeaderContainer.Position = UDim2.new(0, 8, 0, 10)
+HeaderContainer.Size = UDim2.new(1, -12, 0, 32)
+HeaderContainer.Position = UDim2.new(0, 6, 0, 10)
 HeaderContainer.BackgroundTransparency = 1
 HeaderContainer.Parent = Sidebar
 
 local PineappleIcon = Instance.new("ImageLabel")
-PineappleIcon.Size = UDim2.new(0, 26, 0, 26)
-PineappleIcon.Position = UDim2.new(0, 2, 0.5, -13)
+PineappleIcon.Size = UDim2.new(0, 24, 0, 24)
+PineappleIcon.Position = UDim2.new(0, 2, 0.5, -12)
 PineappleIcon.BackgroundTransparency = 1
 PineappleIcon.Image = "rbxassetid://6023426915"
 PineappleIcon.ImageColor3 = AccentColor
 PineappleIcon.Parent = HeaderContainer
 
 local LogoText = Instance.new("TextLabel")
-LogoText.Size = UDim2.new(1, -32, 1, 0)
-LogoText.Position = UDim2.new(0, 32, 0, 0)
+LogoText.Size = UDim2.new(0, 50, 1, 0)
+LogoText.Position = UDim2.new(0, 28, 0, 0)
 LogoText.BackgroundTransparency = 1
 LogoText.Text = "TOCK<font color='#FFB428'>.H</font>"
 LogoText.RichText = true
 LogoText.TextColor3 = Color3.fromRGB(255, 255, 255)
-LogoText.TextSize = 12
+LogoText.TextSize = 11
 LogoText.Font = Enum.Font.GothamBold
 LogoText.TextXAlignment = Enum.TextXAlignment.Left
 LogoText.Parent = HeaderContainer
+
+-- Кнопка выбора языка RU / EU
+local LangBtn = Instance.new("TextButton")
+LangBtn.Size = UDim2.new(0, 42, 0, 22)
+LangBtn.Position = UDim2.new(1, -44, 0.5, -11)
+LangBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+LangBtn.BackgroundTransparency = 0.9
+LangBtn.Text = CurrentLang .. " ▾"
+LangBtn.TextColor3 = AccentColor
+LangBtn.TextSize = 10
+LangBtn.Font = Enum.Font.GothamBold
+LangBtn.Parent = HeaderContainer
+
+Instance.new("UICorner", LangBtn).CornerRadius = UDim.new(0, 5)
+
+-- Выпадающее меню языка
+local LangDropdown = Instance.new("Frame")
+LangDropdown.Size = UDim2.new(0, 42, 0, 44)
+LangDropdown.Position = UDim2.new(1, -44, 1, 2)
+LangDropdown.BackgroundColor3 = Color3.fromRGB(22, 24, 30)
+LangDropdown.Visible = false
+LangDropdown.ZIndex = 10
+LangDropdown.Parent = HeaderContainer
+
+Instance.new("UICorner", LangDropdown).CornerRadius = UDim.new(0, 5)
+
+local DropStroke = Instance.new("UIStroke")
+DropStroke.Color = Color3.fromRGB(255, 255, 255)
+DropStroke.Transparency = 0.9
+DropStroke.Parent = LangDropdown
+
+local RefreshUI -- Объявление функции обновления UI
+
+local function CreateLangOpt(langText, yPos)
+    local Opt = Instance.new("TextButton")
+    Opt.Size = UDim2.new(1, 0, 0, 22)
+    Opt.Position = UDim2.new(0, 0, 0, yPos)
+    Opt.BackgroundTransparency = 1
+    Opt.Text = langText
+    Opt.TextColor3 = Color3.fromRGB(200, 200, 210)
+    Opt.TextSize = 10
+    Opt.Font = Enum.Font.GothamBold
+    Opt.ZIndex = 11
+    Opt.Parent = LangDropdown
+
+    Opt.MouseButton1Click:Connect(function()
+        CurrentLang = langText
+        LangBtn.Text = CurrentLang .. " ▾"
+        LangDropdown.Visible = false
+        if RefreshUI then RefreshUI() end
+    end)
+end
+
+CreateLangOpt("RU", 0)
+CreateLangOpt("EU", 22)
+
+LangBtn.MouseButton1Click:Connect(function()
+    LangDropdown.Visible = not LangDropdown.Visible
+end)
 
 -- Навигация
 local NavList = Instance.new("Frame")
@@ -127,7 +224,7 @@ NavLayout.SortOrder = Enum.SortOrder.LayoutOrder
 NavLayout.Padding = UDim.new(0, 4)
 NavLayout.Parent = NavList
 
--- Блок Соцсетей внизу
+-- Блок Соцсетей
 local SocialsFrame = Instance.new("Frame")
 SocialsFrame.Size = UDim2.new(1, -16, 0, 32)
 SocialsFrame.Position = UDim2.new(0, 8, 1, -42)
@@ -202,14 +299,14 @@ Pages.Main = CreatePage()
 Pages.Visuals = CreatePage()
 Pages.Main.Visible = true
 
-local navTabs = {}
-local function AddTab(name, page)
+local registeredTabs = {}
+local function AddTab(key, page)
     local Btn = Instance.new("TextButton")
     Btn.Size = UDim2.new(1, 0, 0, 28)
     Btn.BackgroundColor3 = AccentColor
-    Btn.BackgroundTransparency = (#navTabs == 0) and 0.88 or 1
-    Btn.Text = "   " .. name
-    Btn.TextColor3 = (#navTabs == 0) and AccentColor or Color3.fromRGB(150, 150, 160)
+    Btn.BackgroundTransparency = (#registeredTabs == 0) and 0.88 or 1
+    Btn.Text = "   " .. L(key)
+    Btn.TextColor3 = (#registeredTabs == 0) and AccentColor or Color3.fromRGB(150, 150, 160)
     Btn.TextSize = 11
     Btn.Font = Enum.Font.GothamMedium
     Btn.TextXAlignment = Enum.TextXAlignment.Left
@@ -217,10 +314,11 @@ local function AddTab(name, page)
 
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
 
-    table.insert(navTabs, {Btn = Btn, Page = page})
+    local tabData = {Btn = Btn, Page = page, Key = key}
+    table.insert(registeredTabs, tabData)
 
     Btn.MouseButton1Click:Connect(function()
-        for _, tab in pairs(navTabs) do
+        for _, tab in pairs(registeredTabs) do
             tab.Page.Visible = false
             Tween(tab.Btn, 0.2, {BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(150, 150, 160)})
         end
@@ -232,10 +330,10 @@ end
 AddTab("Movement", Pages.Main)
 AddTab("Visuals", Pages.Visuals)
 
--- ==========================================
--- Элементы управления
--- ==========================================
-local function AddToggle(parent, text, callback)
+-- Элементы управления с поддержкой перевода
+local registeredLabels = {}
+
+local function AddToggle(parent, key, callback)
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(1, -4, 0, 32)
     Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -248,12 +346,14 @@ local function AddToggle(parent, text, callback)
     Label.Size = UDim2.new(1, -45, 1, 0)
     Label.Position = UDim2.new(0, 10, 0, 0)
     Label.BackgroundTransparency = 1
-    Label.Text = text
+    Label.Text = L(key)
     Label.TextColor3 = Color3.fromRGB(220, 220, 230)
     Label.TextSize = 10
     Label.Font = Enum.Font.Gotham
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = Frame
+
+    table.insert(registeredLabels, {Label = Label, Key = key})
 
     local Switch = Instance.new("Frame")
     Switch.Size = UDim2.new(0, 28, 0, 14)
@@ -292,7 +392,7 @@ local function AddToggle(parent, text, callback)
     end)
 end
 
-local function AddSlider(parent, text, min, max, default, callback)
+local function AddSlider(parent, key, min, max, default, callback)
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(1, -4, 0, 40)
     Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -305,12 +405,14 @@ local function AddSlider(parent, text, min, max, default, callback)
     Label.Size = UDim2.new(1, -50, 0, 18)
     Label.Position = UDim2.new(0, 10, 0, 5)
     Label.BackgroundTransparency = 1
-    Label.Text = text
+    Label.Text = L(key)
     Label.TextColor3 = Color3.fromRGB(220, 220, 230)
     Label.TextSize = 10
     Label.Font = Enum.Font.Gotham
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = Frame
+
+    table.insert(registeredLabels, {Label = Label, Key = key})
 
     local Val = Instance.new("TextLabel")
     Val.Size = UDim2.new(0, 35, 0, 18)
@@ -359,23 +461,29 @@ local function AddSlider(parent, text, min, max, default, callback)
     end)
 end
 
--- ==========================================
--- Вкладки
--- ==========================================
-AddToggle(Pages.Main, "Speed Bypass", function(st) Config.SpeedBypass = st end)
-AddSlider(Pages.Main, "Speed Multiplier", 1, 5, 2, function(v) Config.SpeedMult = v end)
-AddToggle(Pages.Main, "Jump Bypass", function(st) Config.JumpBypass = st end)
-AddSlider(Pages.Main, "Jump Force", 30, 150, 60, function(v) Config.JumpForce = v end)
-AddToggle(Pages.Main, "Noclip Bypass", function(st) Config.NoclipBypass = st end)
-AddToggle(Pages.Main, "Fly Bypass [E]", function(st) Config.FlyBypass = st end)
+-- Динамическое обновление текста при смене языка
+RefreshUI = function()
+    for _, tab in pairs(registeredTabs) do
+        tab.Btn.Text = "   " .. L(tab.Key)
+    end
+    for _, item in pairs(registeredLabels) do
+        item.Label.Text = L(item.Key)
+    end
+end
 
-AddToggle(Pages.Visuals, "CoreGui Safe ESP", function(st) Config.ESPBypass = st end)
-AddToggle(Pages.Visuals, "Expand Hitbox", function(st) Config.HitboxBypass = st end)
-AddSlider(Pages.Visuals, "Hitbox Size", 2, 25, 6, function(v) Config.HitboxSize = v end)
+-- Наполнение Вкладок
+AddToggle(Pages.Main, "SpeedBypass", function(st) Config.SpeedBypass = st end)
+AddSlider(Pages.Main, "SpeedMult", 1, 5, 2, function(v) Config.SpeedMult = v end)
+AddToggle(Pages.Main, "JumpBypass", function(st) Config.JumpBypass = st end)
+AddSlider(Pages.Main, "JumpForce", 30, 150, 60, function(v) Config.JumpForce = v end)
+AddToggle(Pages.Main, "NoclipBypass", function(st) Config.NoclipBypass = st end)
+AddToggle(Pages.Main, "FlyBypass", function(st) Config.FlyBypass = st end)
 
--- ==========================================
--- Игровая Логика
--- ==========================================
+AddToggle(Pages.Visuals, "ESPBypass", function(st) Config.ESPBypass = st end)
+AddToggle(Pages.Visuals, "HitboxBypass", function(st) Config.HitboxBypass = st end)
+AddSlider(Pages.Visuals, "HitboxSize", 2, 25, 6, function(v) Config.HitboxSize = v end)
+
+-- Игровая логика
 RunService.RenderStepped:Connect(function(delta)
     if Config.SpeedBypass then
         local hrp = GetHRP()
