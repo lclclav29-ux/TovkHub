@@ -1,13 +1,18 @@
--- Загрузчик TockHub
-local repo = "твой_логин_на_гитхабе" -- замени на свой ник
+-- Обновленный загрузчик с обходом кэша
+local repo = "lclclav29-ux/TovkHub"
 local branch = "main"
+local file = "main.lua"
+
+-- Добавляем случайный параметр с временем, чтобы сбросить кэш
+local cacheBuster = "?t=" .. tostring(os.time())
+local url = ("https://raw.githubusercontent.com/%s/%s/%s" .. cacheBuster):format(repo, branch, file)
 
 local success, result = pcall(function()
-    return game:HttpGet(("https://raw.githubusercontent.com/%s/tockhub/%s/main.lua"):format(repo, branch))
+    return game:HttpGet(url)
 end)
 
 if success then
     loadstring(result)()
 else
-    warn("Не удалось загрузить TockHub: " .. tostring(result))
+    warn("Ошибка загрузки TockHub: " .. tostring(result))
 end
